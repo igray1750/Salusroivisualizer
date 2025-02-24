@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safety ROI Comparison</title>
+  
+  <!-- Load React -->
+  <script src="https://unpkg.com/react@17/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Load Recharts -->
+  <script src="https://unpkg.com/recharts@2.1.15/umd/Recharts.min.js" crossorigin></script>
+  
+  <!-- Load Babel for JSX support -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f2f5;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    .recharts-wrapper .recharts-cartesian-grid-horizontal line,
+    .recharts-wrapper .recharts-cartesian-grid-vertical line {
+      stroke: #e0e0e0;
+    }
+    
+    .recharts-tooltip-wrapper {
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="root"></div>
+  
+  <script type="text/babel">
+    // Destructure components from Recharts
+    const {
+      ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+      ResponsiveContainer, Line, Cell, ReferenceLine
+    } = Recharts;
+    
+    // Main App Component
+    const OptimizedROIComparison = () => {
+      // Data comparing relative impact using percentages with ROI impact weight
+      const comparisonData = [
+        {
+          category: "Insurance Cost Reduction",
+          subcategory: "EMR, XMOD & Workers' Comp",
+          salusSolution: 100,
+          procoreOnly: 25,
+          incumbent: 90,
+          roiImpact: "HIGH",
+          impactWeight: 3,
+          notes: "Directly impacts premium costs",
+          evidence: "Clients average 0.17 EMR reduction in year 1"
+        },
+        {
+          category: "Incident Prevention",
+          subcategory: "TRIR/DART Reduction",
+          salusSolution: 100,
+          procoreOnly: 35,
+          incumbent: 85,
+          roiImpact: "HIGH",
+          impactWeight: 3,
+          notes: "Reduces recordable incidents",
+          evidence: "42% reduction in TRIR over 24 months"
+        },
+        {
+          category: "Field Productivity",
+          subcategory: "Mobile Access & Efficiency",
+          salusSolution: 100,
+          procoreOnly: 60,
+          incumbent: 80,
+          roiImpact: "MEDIUM",
+          impactWeight: 2,
+          notes: "Keeps supervisors in the field",
+          evidence: "Average 4.2 hours saved per supervisor weekly"
+        },
+        {
+          category: "Compliance Management",
+          subcategory: "Training & Certification Tracking",
+          salusSolution: 100,
+          procoreOnly: 40,
+          incumbent: 75,
+          roiImpact: "MEDIUM",
+          impactWeight: 2,
+          notes: "Prevents violations & citations",
+          evidence: "85% reduction in certification lapses"
+        },
+        {
+          category: "Reporting & Analytics",
+          subcategory: "Dashboards & Visibility",
+          salusSolution: 95,
+          procoreOnly: 55,
+          incumbent: 100,
+          roiImpact: "LOW",
+          impactWeight: 1,
+          notes: "Near-equal to incumbent",
+          evidence: "Industry-specific KPI tracking"
+        },
+        {
+          category: "Project Integration",
+          subcategory: "Procore & System Connectivity",
+          salusSolution: 100,
+          procoreOnly: 100,
+          incumbent: 0,
+          roiImpact: "HIGH", 
+          impactWeight: 3,
+          notes: "Eliminates data silos",
+          evidence: "Full bidirectional sync with Procore"
+        }
+      ];
+
+      // Calculate weighted scores
+      const calculateWeightedScore = (solution) => {
+        const totalWeight = comparisonData.reduce((sum, item) => sum + item.impactWeight, 0);
+        const weightedSum = comparisonData.reduce((sum, item) => sum + (item[solution] * item.impactWeight), 0);
+        return (weightedSum / totalWeight).toFixed(1);
+      };
+      
+      const salusWeightedScore = calculateWeightedScore('salusSolution');
+      const procoreWeightedScore = calculateWeightedScore('procoreOnly');
+      const incumbentWeightedScore = calculateWeightedScore('incumbent');
+      
+      // Custom tooltip for the chart
+      const CustomTooltip = ({ active, payload, label }) => {
+        if (active && payload && payload.length) {
+          const item = payload[0].payload;
+          return (
+            <div className="bg-white p-4 shadow-lg rounded-md border border-gray-200 max-w-md">
+              <h4 className="font-bold text-lg">{item.category}</h4>
+              <p className="text-gray-500 text-sm mb-2">{item.subcategory}</p>
+              
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <div>
+                  <p className="text-green-700 font-bold text-lg">Salus: {item.salusSolution}%</p>
+                </div>
+                <div>
+                  <p className="text-blue-700 font-bold text-lg">Procore Only: {item.procoreOnly}%</p>
+                </div>
+              </div>
+              <div className="mt-1">
+                <p className="text-purple-600 text-sm">Incumbent: {item.incumbent}%</p>
+              </div>
+              
+              <div className="mt-2 pt-2 border-t border-gray-200">
+                <div className="flex items-center mb-1">
+                  <span className="text-gray-700 font-semibold mr-2">ROI Impact:</span>
+                  <span className={`font-bold px-2 py-0.5 rounded text-white text-xs ${
+                    item.roiImpact === 'HIGH' ? 'bg-red-600' : 
+                    item.roiImpact === 'MEDIUM' ? 'bg-orange-500' : 'bg-blue-500'
+                  }`}>{item.roiImpact}</span>
+                </div>
+                <p className="text-gray-600 text-sm">{item.notes}</p>
+                <p className="text-gray-600 text-sm italic mt-1">Evidence: {item.evidence}</p>
+              </div>
+            </div>
+          );
+        }
+        return null;
+      };
+      
+      // Custom bar color based on ROI impact
+      const getBarColor = (entry) => {
+        const baseColor = '#2ca02c'; // Green
+        if (entry.roiImpact === 'HIGH') {
+          return '#1a7a1a'; // Darker green
+        } else if (entry.roiImpact === 'MEDIUM') {
+          return '#2ca02c'; // Regular green
+        } else {
+          return '#6ad86a'; // Lighter green
+        }
+      };
+
+      return (
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <h2 className="text-xl font-bold text-center mb-2">Safety ROI Comparison: Salus vs. Alternatives</h2>
+          <p className="text-center text-gray-600 mb-6">Effectiveness by category with weighted impact on contractor bottom line</p>
+          
+          <div className="h-96 w-full mb-6">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart
+                data={comparisonData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                <XAxis 
+                  dataKey="category" 
+                  angle={-45} 
+                  textAnchor="end" 
+                  height={100} 
+                  tick={{fontSize: 12}}
+                />
+                <YAxis 
+                  tickFormatter={(value) => `${value}%`} 
+                  domain={[0, 110]} 
+                  tick={{fontSize: 12}}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Bar 
+                  name="Salus Solution" 
+                  dataKey="salusSolution" 
+                  barSize={30}
+                >
+                  {comparisonData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={getBarColor(entry)} />
+                  ))}
+                </Bar>
+                <Bar name="Procore-Only" dataKey="procoreOnly" fill="#1f77b4" barSize={30} />
+                <Line 
+                  name="Incumbent Solution" 
+                  type="monotone" 
+                  dataKey="incumbent" 
+                  stroke="#9467bd" 
+                  strokeDasharray="5 5"
+                  strokeWidth={1.5}
+                  dot={{ 
+                    r: 3, 
+                    strokeWidth: 1
+                  }}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-bold text-green-800">Salus</h3>
+                <span className="text-3xl font-bold text-green-700">{salusWeightedScore}%</span>
+              </div>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between items-center">
+                  <span>Weighted ROI Score:</span>
+                  <span className="font-bold text-green-700">{salusWeightedScore}%</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>vs. Procore:</span>
+                  <span className="font-bold text-green-700">+{(salusWeightedScore - procoreWeightedScore).toFixed(1)}%</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>vs. Incumbent:</span>
+                  <span className="font-bold text-green-700">+{(salusWeightedScore - incumbentWeightedScore).toFixed(1)}%</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-bold text-blue-800">Procore-Only</h3>
+                <span className="text-3xl font-bold text-blue-700">{procoreWeightedScore}%</span>
+              </div>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between items-center">
+                  <span>Weighted ROI Score:</span>
+                  <span className="font-bold text-blue-700">{procoreWeightedScore}%</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>vs. Salus:</span>
+                  <span className="font-bold text-red-600">{(procoreWeightedScore - salusWeightedScore).toFixed(1)}%</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Key Weakness:</span>
+                  <span className="font-bold text-red-600">Safety Metrics</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-bold text-purple-800">Incumbent</h3>
+                <span className="text-3xl font-bold text-purple-700">{incumbentWeightedScore}%</span>
+              </div>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between items-center">
+                  <span>Weighted ROI Score:</span>
+                  <span className="font-bold text-purple-700">{incumbentWeightedScore}%</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>vs. Salus:</span>
+                  <span className="font-bold text-red-600">{(incumbentWeightedScore - salusWeightedScore).toFixed(1)}%</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Critical Gap:</span>
+                  <span className="font-bold text-red-600">No Integration</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 className="font-bold text-gray-800 mb-2">Client Evidence & Transition</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-700 font-semibold">Proven Results:</p>
+                <ul className="list-disc pl-5 space-y-1 text-gray-600 text-sm">
+                  <li>Average EMR reduction of 0.17 in first year</li>
+                  <li>42% reduction in TRIR over 24 months</li>
+                  <li>85% reduction in certification lapses</li>
+                  <li>4.2 hours saved per supervisor weekly</li>
+                </ul>
+              </div>
+              <div>
+                <p className="text-sm text-gray-700 font-semibold">Transition Plan:</p>
+                <ul className="list-disc pl-5 space-y-1 text-gray-600 text-sm">
+                  <li><strong>Day 1-30:</strong> Setup & data migration from incumbent</li>
+                  <li><strong>Day 15-45:</strong> Phased rollout & parallel systems</li>
+                  <li><strong>Day 30-60:</strong> Procore integration & optimization</li>
+                  <li><strong>Ongoing:</strong> Custom dashboard development to match incumbent capabilities</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <h3 className="font-bold text-blue-800 mb-2">Bottom Line for Contractors</h3>
+            <p className="text-gray-700 text-sm">
+              When weighted by actual financial impact on your business, Salus delivers superior ROI by combining best-in-class safety capabilities with essential Procore integration. Our weighted analysis shows Salus outperforms both alternatives when factoring in what matters most: EMR reduction, incident prevention, and eliminating costly data silos. The transition plan ensures minimal disruption while providing a clear path to equal or exceed incumbent dashboard capabilities.
+            </p>
+          </div>
+        </div>
+      );
+    };
+    
+    // Render App
+    ReactDOM.render(<OptimizedROIComparison />, document.getElementById('root'));
+  </script>
+</body>
+</html>
